@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "my-eth-gate": {
+    "eth-payment-registry": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "my-eth-gate:build:production"
+              "buildTarget": "eth-payment-registry:build:production"
             },
             "development": {
-              "buildTarget": "my-eth-gate:build:development"
+              "buildTarget": "eth-payment-registry:build:development"
             }
           },
           "defaultConfiguration": "development"

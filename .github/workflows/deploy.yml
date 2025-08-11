@@ -1,0 +1,23 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci
+      - run: |
+          npm run build -- --configuration production --base-href=https://jsandi00.github.io/payment-registry/
+          cp dist/eth-payment-registry/browser/index.html dist/eth-payment-registry/browser/404.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/eth-payment-registry/browser
+      - uses: actions/deploy-pages@v4
