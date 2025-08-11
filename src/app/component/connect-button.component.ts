@@ -1,18 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WalletService } from './wallet.service';
+import { WalletService } from '../service/wallet.service';
 
 @Component({
   selector: 'app-connect-button',
   standalone: true,
   imports: [CommonModule],
+  styleUrls: ['../app.scss'],
   template: `
     <div class="flex items-center gap-3 p-3 rounded border">
-      <button (click)="connect()" class="px-3 py-2 rounded bg-black text-white">
+      <button (click)="connect()" class="btn-connect" [ngClass]="vm.connected ? 'connected' : ''">
         {{ (vm.connected ? 'Connected' : 'Connect Wallet') }}
       </button>
-      <div *ngIf="vm.connected" class="text-sm">
-        <div><strong>Addr:</strong> {{ vm.address | slice:0:6 }}…{{ vm.address | slice:-4 }}</div>
+      <div *ngIf="vm.connected" class="wallet-status">
+        <div><strong>Address:</strong> {{ vm.address }}</div>
         <div><strong>Balance:</strong> {{ vm.balanceEth }} ETH</div>
         <div *ngIf="vm.wrongNetwork" class="text-red-600">
           Wrong network. <a href="#" (click)="switch()">Switch to Sepolia</a>
@@ -35,6 +36,15 @@ export class ConnectButtonComponent implements OnInit {
     });
   }
 
-  async connect() { await this.wallet.connect(); }
+  async connect() {
+    try {
+      await this.wallet.connect();
+      this.wallet.state$.subscribe(s => {
+        console.log('wallet state', s); // address, chainId, wrongNetwork
+      });
+    } catch (e:any) {
+      console.warn('connect error', e?.code, e?.message);
+    }
+  }
   async switch() { await this.wallet.switchToSupportedChain(); }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import detectEthereumProvider from '@metamask/detect-provider';
 import { BrowserProvider, Eip1193Provider, formatEther } from 'ethers';
 import { BehaviorSubject } from 'rxjs';
-import {environment} from '../environment';
+import {environment} from '../../environment';
 
 export interface WalletState {
   address: `0x${string}` | null;

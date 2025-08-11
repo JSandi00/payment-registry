@@ -1,17 +1,22 @@
 import { Injectable, NgZone } from '@angular/core';
-import { environment } from '../environment';
-import { CONTRACT_ABI } from './abi';
-import { BrowserProvider, Contract, JsonRpcProvider, parseEther, ZeroAddress } from 'ethers';
+import { environment } from '../../environment';
+import { CONTRACT_ABI } from '../abi';
+import { Contract, JsonRpcProvider, parseEther, ZeroAddress } from 'ethers';
 import { BehaviorSubject } from 'rxjs';
-import { TxInput, TxRecord } from './types';
+import { TxInput, TxRecord } from '../type/types';
 import { WalletService } from './wallet.service';
+import {PaymentsRegistry, TxAddedListener} from '../type/contract.types';
 
 @Injectable({ providedIn: 'root' })
 export class ContractService {
   private readProvider = new JsonRpcProvider(environment.rpcUrl);
-  private contractRead = new Contract(environment.contractAddress, CONTRACT_ABI, this.readProvider);
+  private contractRead = new Contract(
+    environment.contractAddress,
+    CONTRACT_ABI,
+    this.readProvider
+  ) as unknown as PaymentsRegistry;
 
-  private contractWrite?: Contract;
+  private contractWrite?: PaymentsRegistry;
   private eventsAttached = false;
 
   private _txs = new BehaviorSubject<TxRecord[]>([]);
@@ -23,26 +28,32 @@ export class ContractService {
     const bp = this.wallet.getBrowserProvider();
     if (!bp) return;
     const signer = await bp.getSigner();
-    this.contractWrite = new Contract(environment.contractAddress, CONTRACT_ABI, signer);
+
+    this.contractWrite = new Contract(
+      environment.contractAddress,
+      CONTRACT_ABI,
+      signer
+    ) as unknown as PaymentsRegistry;
+
     if (!this.eventsAttached) this.attachEventListener();
   }
 
   private attachEventListener() {
-    this.contractRead.on('TransactionAdded',
-      (owner: string, index: bigint, amount: bigint, date: bigint, description: string, ev: any) => {
-        this.zone.run(() => {
-          const rec: TxRecord = {
-            index: Number(index),
-            amountEth: (Number(amount) / 1e18).toString(),
-            dateIso: new Date(Number(date) * 1000).toISOString(),
-            description,
-            owner: owner as `0x${string}`,
-            txHash: ev?.log?.transactionHash
-          };
-          this._txs.next([rec, ...this._txs.value]);
-        });
-      }
-    );
+    const handler: TxAddedListener = (owner, index, amount, date, description, ev) => {
+      this.zone.run(() => {
+        this._txs.next([{
+          index: Number(index),
+          amountEth: (Number(amount) / 1e18).toString(),
+          dateIso: new Date(Number(date) * 1000).toISOString(),
+          description,
+          owner: owner as `0x${string}`,
+          txHash: ev?.log?.transactionHash
+        }, ...this._txs.value]);
+      });
+    };
+
+    // Usa la .on original del Contract (no re-tipamos 'on')
+    this.contractRead.on('TransactionAdded', handler as any);
     this.eventsAttached = true;
   }
 

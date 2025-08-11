@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ContractService } from './contract.service';
-import { TxInput } from './types';
-import { WalletService } from './wallet.service';
+import { ContractService } from '../service/contract.service';
+import { TxInput } from '../type/types';
+import { WalletService } from '../service/wallet.service';
 
 @Component({
   selector: 'app-add-tx-form',
   standalone: true,
+  styleUrls: ['../app.scss'],
   imports: [CommonModule, FormsModule],
   template: `
     <form class="grid gap-3 p-3 border rounded" (ngSubmit)="submit()" #f="ngForm">
@@ -25,9 +26,10 @@ import { WalletService } from './wallet.service';
       </div>
 
       <div class="flex items-center gap-3">
-        <button class="px-3 py-2 rounded bg-blue-600 text-white" [disabled]="loading || !connected">Add Transaction</button>
+        <button class="btn-primary" [disabled]="loading || !connected">Add Transaction</button>
         <span *ngIf="loading">Sending…</span>
-        <span *ngIf="hash">Tx: {{ hash | slice:0:10 }}…</span>
+        <br>
+        <a *ngIf="hash" [href]="'https://sepolia.etherscan.io/tx/' + hash">Tx: {{ hash | slice:0:10 }}…</a>
       </div>
       <div *ngIf="!connected" class="text-sm text-orange-700">Connect your wallet to submit.</div>
       <div *ngIf="error" class="text-sm text-red-600">{{ error }}</div>
